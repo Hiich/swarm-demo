@@ -1,6 +1,7 @@
-'use client';
+"use client"
 
-import { useState, useMemo } from 'react';
+import * as React from "react"
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -8,264 +9,180 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Moon, Sun, ArrowUpDown } from 'lucide-react';
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ProcessedModel } from "@/lib/types"
+import { formatPriceDisplay, getProviderColor } from "@/lib/model-utils"
 
-interface Model {
-  id: string;
-  name: string;
-  pricing: {
-    prompt: string;
-    completion: string;
-  };
-  context_length: number;
-  architecture: {
-    modality: string;
-  };
-}
+type SortField = keyof ProcessedModel
+type SortOrder = "asc" | "desc"
 
 interface ModelTableProps {
-  models: Model[];
-  timestamp: string;
+  models: ProcessedModel[]
 }
 
-type SortField = 'name' | 'provider' | 'inputPrice' | 'outputPrice' | 'contextLength' | 'modality';
-type SortOrder = 'asc' | 'desc';
-
-const PROVIDER_COLORS: Record<string, string> = {
-  openai: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
-  anthropic: 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20',
-  google: 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20',
-  meta: 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20',
-  mistral: 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20',
-  cohere: 'bg-pink-500/10 text-pink-500 hover:bg-pink-500/20',
-  default: 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20',
-};
-
-function extractProvider(id: string): string {
-  const parts = id.split('/');
-  return parts[0] || 'unknown';
-}
-
-function getProviderColor(provider: string): string {
-  const key = provider.toLowerCase();
-  return PROVIDER_COLORS[key] || PROVIDER_COLORS.default;
-}
-
-function formatPrice(priceStr: string): string {
-  const price = parseFloat(priceStr) * 1000000;
-  return `$${price.toFixed(2)}`;
-}
-
-function formatModality(modality: string): string {
-  return modality.replace(/->/, ' → ').replace(/\+/g, ' + ');
-}
-
-export function ModelTable({ models, timestamp }: ModelTableProps) {
-  const [search, setSearch] = useState('');
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-  const [darkMode, setDarkMode] = useState(false);
-
-  // Initialize dark mode from system preference
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setDarkMode(prefersDark);
-      if (prefersDark) {
-        document.documentElement.classList.add('dark');
-      }
-    }
-  });
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
-  };
+export function ModelTable({ models }: ModelTableProps) {
+  const [sortField, setSortField] = React.useState<SortField>("name")
+  const [sortOrder, setSortOrder] = React.useState<SortOrder>("asc")
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
     } else {
-      setSortField(field);
-      setSortOrder('asc');
+      setSortField(field)
+      setSortOrder("asc")
     }
-  };
+  }
 
-  const filteredAndSortedModels = useMemo(() => {
-    let filtered = models.filter((model) => {
-      const searchLower = search.toLowerCase();
-      const provider = extractProvider(model.id);
-      return (
-        model.name.toLowerCase().includes(searchLower) ||
-        provider.toLowerCase().includes(searchLower) ||
-        model.id.toLowerCase().includes(searchLower)
-      );
-    });
+  const sortedModels = React.useMemo(() => {
+    return [...models].sort((a, b) => {
+      const aValue = a[sortField]
+      const bValue = b[sortField]
 
-    filtered.sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortField) {
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'provider':
-          comparison = extractProvider(a.id).localeCompare(extractProvider(b.id));
-          break;
-        case 'inputPrice':
-          comparison = parseFloat(a.pricing.prompt) - parseFloat(b.pricing.prompt);
-          break;
-        case 'outputPrice':
-          comparison = parseFloat(a.pricing.completion) - parseFloat(b.pricing.completion);
-          break;
-        case 'contextLength':
-          comparison = a.context_length - b.context_length;
-          break;
-        case 'modality':
-          comparison = (a.architecture.modality || '').localeCompare(b.architecture.modality || '');
-          break;
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortOrder === "asc" ? aValue - bValue : bValue - aValue
       }
 
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
+      const aStr = String(aValue).toLowerCase()
+      const bStr = String(bValue).toLowerCase()
+      return sortOrder === "asc"
+        ? aStr.localeCompare(bStr)
+        : bStr.localeCompare(aStr)
+    })
+  }, [models, sortField, sortOrder])
 
-    return filtered;
-  }, [models, search, sortField, sortOrder]);
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />
+    }
+    return sortOrder === "asc" ? (
+      <ArrowUp className="ml-2 h-4 w-4" />
+    ) : (
+      <ArrowDown className="ml-2 h-4 w-4" />
+    )
+  }
+
+  // Find min and max prices for highlighting
+  const inputPrices = models.map(m => m.inputPrice)
+  const outputPrices = models.map(m => m.outputPrice)
+  const minInput = Math.min(...inputPrices)
+  const maxInput = Math.max(...inputPrices)
+  const minOutput = Math.min(...outputPrices)
+  const maxOutput = Math.max(...outputPrices)
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <Input
-          type="text"
-          placeholder="Search by model name or provider..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-md"
-        />
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={toggleDarkMode}
-          className="shrink-0"
-        >
-          {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </Button>
-      </div>
-
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('name')}
-                  className="hover:bg-transparent p-0 h-auto font-semibold"
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("name")}
+                className="h-auto p-0 hover:bg-transparent"
+              >
+                Model Name
+                <SortIcon field="name" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("provider")}
+                className="h-auto p-0 hover:bg-transparent"
+              >
+                Provider
+                <SortIcon field="provider" />
+              </Button>
+            </TableHead>
+            <TableHead className="text-right">
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("inputPrice")}
+                className="h-auto p-0 hover:bg-transparent ml-auto flex"
+              >
+                Input Price (1M tokens)
+                <SortIcon field="inputPrice" />
+              </Button>
+            </TableHead>
+            <TableHead className="text-right">
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("outputPrice")}
+                className="h-auto p-0 hover:bg-transparent ml-auto flex"
+              >
+                Output Price (1M tokens)
+                <SortIcon field="outputPrice" />
+              </Button>
+            </TableHead>
+            <TableHead className="text-right">
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("contextWindow")}
+                className="h-auto p-0 hover:bg-transparent ml-auto flex"
+              >
+                Context Window
+                <SortIcon field="contextWindow" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("modality")}
+                className="h-auto p-0 hover:bg-transparent"
+              >
+                Modality
+                <SortIcon field="modality" />
+              </Button>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedModels.map((model) => (
+            <TableRow key={model.id}>
+              <TableCell className="font-medium">{model.name}</TableCell>
+              <TableCell>
+                <Badge className={`${getProviderColor(model.provider)} text-white border-0`}>
+                  {model.provider}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <span
+                  className={
+                    model.inputPrice === minInput
+                      ? "text-green-600 dark:text-green-400 font-semibold"
+                      : model.inputPrice === maxInput
+                      ? "text-red-600 dark:text-red-400"
+                      : ""
+                  }
                 >
-                  Model Name
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('provider')}
-                  className="hover:bg-transparent p-0 h-auto font-semibold"
+                  {formatPriceDisplay(model.inputPrice)}
+                </span>
+              </TableCell>
+              <TableCell className="text-right">
+                <span
+                  className={
+                    model.outputPrice === minOutput
+                      ? "text-green-600 dark:text-green-400 font-semibold"
+                      : model.outputPrice === maxOutput
+                      ? "text-red-600 dark:text-red-400"
+                      : ""
+                  }
                 >
-                  Provider
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="text-right">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('inputPrice')}
-                  className="hover:bg-transparent p-0 h-auto font-semibold w-full justify-end"
-                >
-                  Input Price/1M
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="text-right">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('outputPrice')}
-                  className="hover:bg-transparent p-0 h-auto font-semibold w-full justify-end"
-                >
-                  Output Price/1M
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="text-right">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('contextLength')}
-                  className="hover:bg-transparent p-0 h-auto font-semibold w-full justify-end"
-                >
-                  Context Window
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('modality')}
-                  className="hover:bg-transparent p-0 h-auto font-semibold"
-                >
-                  Modality
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
+                  {formatPriceDisplay(model.outputPrice)}
+                </span>
+              </TableCell>
+              <TableCell className="text-right">
+                {model.contextWindow.toLocaleString()}
+              </TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {model.modality}
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAndSortedModels.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No models found matching your search.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredAndSortedModels.map((model) => {
-                const provider = extractProvider(model.id);
-                return (
-                  <TableRow key={model.id}>
-                    <TableCell className="font-medium">{model.name}</TableCell>
-                    <TableCell>
-                      <Badge className={getProviderColor(provider)}>
-                        {provider}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatPrice(model.pricing.prompt)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatPrice(model.pricing.completion)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {model.context_length.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-muted-foreground">
-                        {formatModality(model.architecture.modality || 'text')}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="text-sm text-muted-foreground text-center">
-        Showing {filteredAndSortedModels.length} of {models.length} models • Last updated:{' '}
-        {new Date(timestamp).toLocaleString()}
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
-  );
+  )
 }
