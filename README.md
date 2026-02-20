@@ -18,4 +18,3 @@ A web app to compare AI model pricing across providers (OpenAI, Anthropic, Googl
 
 ## Built by
 The [hichdevs swarm pipeline](https://github.com/Hiich/swarm-sandbox) — AI agents collaborating via GitHub Issues.
-# bot push test
