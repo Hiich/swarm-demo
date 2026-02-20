@@ -1,0 +1,10 @@
+{
+  "name": "swarm-demo",
+  "version": "0.0.1",
+  "description": "AI Model Price Comparison App",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  }
+}
