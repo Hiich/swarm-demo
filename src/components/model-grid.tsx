@@ -33,8 +33,8 @@ export function ModelGrid({ models, selectedModels, isSelected, onToggleSelect }
             transition={{ duration: 0.2, delay: Math.min(i * 0.02, 0.3) }}
             onClick={() => onToggleSelect(model)}
             className={cn(
-              "group relative cursor-pointer rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
-              selected && "ring-2 ring-primary border-primary bg-primary/5"
+              "group relative cursor-pointer rounded-xl border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 hover:border-primary/30",
+              selected && "ring-2 ring-primary border-primary bg-primary/5 shadow-primary/10"
             )}
           >
             {/* Selection indicator */}

@@ -21,7 +21,7 @@ export function ComparisonBar({ selectedModels, onClear, onCompare, onRemove }: 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] backdrop-blur-lg md:px-8"
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-primary/20 bg-background/95 px-4 py-3 shadow-[0_-4px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl md:px-8"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-3 overflow-x-auto">

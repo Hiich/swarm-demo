@@ -17,6 +17,12 @@ interface ComparisonSheetProps {
   models: ProcessedModel[]
 }
 
+function gridCols(count: number): string {
+  if (count === 1) return "grid-cols-1"
+  if (count === 2) return "grid-cols-2"
+  return "grid-cols-3"
+}
+
 function PriceBar({ value, max, isCheapest }: { value: number; max: number; isCheapest: boolean }) {
   const width = max > 0 ? Math.max((value / max) * 100, 4) : 4
   return (
@@ -56,7 +62,7 @@ export function ComparisonSheet({ open, onOpenChange, models }: ComparisonSheetP
 
         <div className="space-y-8 pb-8">
           {/* Model names + providers */}
-          <div className={cn("grid gap-4", `grid-cols-${models.length}`)}>
+          <div className={cn("grid gap-4", gridCols(models.length))}>
             {models.map((model) => (
               <div key={model.id} className="text-center">
                 <h3 className="font-bold text-base leading-tight">{model.name}</h3>
@@ -72,7 +78,7 @@ export function ComparisonSheet({ open, onOpenChange, models }: ComparisonSheetP
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Input Price (per 1M tokens)
             </h4>
-            <div className={cn("grid gap-4", `grid-cols-${models.length}`)}>
+            <div className={cn("grid gap-4", gridCols(models.length))}>
               {models.map((model) => {
                 const isCheapest = model.inputPrice === minInput
                 return (
@@ -98,7 +104,7 @@ export function ComparisonSheet({ open, onOpenChange, models }: ComparisonSheetP
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Output Price (per 1M tokens)
             </h4>
-            <div className={cn("grid gap-4", `grid-cols-${models.length}`)}>
+            <div className={cn("grid gap-4", gridCols(models.length))}>
               {models.map((model) => {
                 const isCheapest = model.outputPrice === minOutput
                 return (
@@ -124,7 +130,7 @@ export function ComparisonSheet({ open, onOpenChange, models }: ComparisonSheetP
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Context Window
             </h4>
-            <div className={cn("grid gap-4", `grid-cols-${models.length}`)}>
+            <div className={cn("grid gap-4", gridCols(models.length))}>
               {models.map((model) => {
                 const isLargest = model.contextWindow === maxContext
                 return (
@@ -145,7 +151,7 @@ export function ComparisonSheet({ open, onOpenChange, models }: ComparisonSheetP
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Modality
             </h4>
-            <div className={cn("grid gap-4", `grid-cols-${models.length}`)}>
+            <div className={cn("grid gap-4", gridCols(models.length))}>
               {models.map((model) => (
                 <div key={model.id} className="rounded-lg bg-muted/50 p-3">
                   <span className="text-sm font-medium">{model.modality}</span>

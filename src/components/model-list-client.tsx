@@ -124,7 +124,7 @@ export function ModelListClient({ models, lastUpdated }: ModelListClientProps) {
       {/* Header */}
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary/80 to-foreground/70 bg-clip-text text-transparent">
             AI Model Pricing
           </h1>
           <p className="mt-1 text-muted-foreground">
